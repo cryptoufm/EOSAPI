@@ -57,20 +57,19 @@ def transfer():
 
 
 if __name__ == '__main__':
-    print("API INIT")
 
-    # init keos after
-    kill_keos = subprocess.Popen(['pkill', 'keosd'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
-    kill_keos_out, kill_keos_err = kill_keos.communicate()
-    init_keos = subprocess.Popen(['keosd', '&'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  
-    init_keos_out, init_keos_err = init_keos.communicate()
-    print("paso")
-    print("keos init error") if(init_keos_err != None) else print("keos initilized")
+    # # init keos after
+    # kill_keos = subprocess.Popen(['pkill', 'keosd'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    # kill_keos_out, kill_keos_err = kill_keos.communicate()
+    # init_keos = subprocess.Popen(['keosd', '&'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  
+    # init_keos_out, init_keos_err = init_keos.communicate()
+    # print("paso")
+    # print("keos init error") if(init_keos_err != None) else print("keos initilized")
 
-    # unlock default wallet
-    lock_wallet = subprocess.Popen(['cleos', 'wallet', 'lock'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
-    unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password','PW5KCH1kz3L1WZDCy98Hrr8kur73T6KfFGHfLzYPb2bAVG4pHR5ns'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
-    unlock_out, unlock_err = unlock_wallet.communicate()
-    print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
+    # # unlock default wallet
+    # lock_wallet = subprocess.Popen(['cleos', 'wallet', 'lock'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    # unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password','PW5KCH1kz3L1WZDCy98Hrr8kur73T6KfFGHfLzYPb2bAVG4pHR5ns'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    # unlock_out, unlock_err = unlock_wallet.communicate()
+    # print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
 
     app.run(debug=True, port = 5000, host= '0.0.0.0')
