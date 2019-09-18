@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # unlock default wallet
     lock_wallet = subprocess.Popen(['cleos', 'wallet', 'lock'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
-    unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password','PW5JgLRGuzXmZPKT27vq155hFnLWb1vkt5Ahci5idHaqmYKWVC78G'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password',''], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     unlock_out, unlock_err = unlock_wallet.communicate()
     print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
 
