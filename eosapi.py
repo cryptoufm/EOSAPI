@@ -46,4 +46,4 @@ if __name__ == '__main__':
     print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
 
     #
-    app.run(debug=True, port = 5000)
+    app.run(debug=True, port = 5000, host= '0.0.0.0')
