@@ -37,7 +37,7 @@ def createAccount():
                         'public_key':public_key
                         }
         else:
-            response = {'error':'An error ocurred'}
+            response = {'error':create_user_out}
         return str(response)
     else:
         return 'Missing account or email!'
