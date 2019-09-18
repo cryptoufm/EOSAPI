@@ -44,7 +44,29 @@ def createAccount():
 
 @app.route('/getScores')
 def getScores():
-    return 'scores perro'
+    response = [
+	      {  
+	         "name":"Luis Araneda",
+	         "balance":"178.00"
+	      },
+	      {  
+	         "name":"Nicole Stackmann",
+	         "balance":"143.00"
+	      },
+	      {  
+	         "name":"Juan Pablo Safie",
+	         "balance":"99.00"	
+	      },
+	      {  
+	         "name":"Astrid Morales",
+	         "balance":"66.00"
+	      },
+	      {  
+	         "name":"Alejandro Melgar",
+	         "balance":"17.00"
+	      }
+	]
+    return str(response)
 
 @app.route('/getBalance')
 def getBalance():
@@ -53,7 +75,6 @@ def getBalance():
 @app.route('/transfer')
 def transfer():
     return 'transfer'
-
 
 
 if __name__ == '__main__':
