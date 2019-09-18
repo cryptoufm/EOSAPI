@@ -1,6 +1,9 @@
 from flask import Flask, request
 import subprocess
 app = Flask(__name__)
+import os.path
+
+
 
 
 
@@ -15,7 +18,7 @@ def createAccount():
     if(email != None and account != None):
         #create keys
         create_keys = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'create', 'key', '-f', 'KeysUser.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        f = open("KeysUser.txt", "r")
+        f = open(os.path.join("KeysUser.txt"), "r")
         private_key = f.readline()[13:-1]
         public_key = f.readline()[12:-1]
         # create user
