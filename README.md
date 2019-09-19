@@ -74,6 +74,7 @@ The response of the API should look like the following JSON structure:
 {"username": "Isabel",
 "private_key": "5K7sHYshU68Vs4gBANWwRGESESNa5RrEjMUdsNPKGKkaqnZjVQ2", 
 "public_key": "EOS7Xa1oLuYvuUMtwzgj5GKEUbMmLf9473tbvZJbfmyn5c3DUsfoT"}
+___
 
 #### getScores/
 
@@ -94,6 +95,7 @@ The response of the API should look like the following JSON structure:
 "balance":"99.0000"
 }]
 
+___
   
 #### getBalance/
 
@@ -109,7 +111,7 @@ Returns the balance of tokens for the provided uid.
 
   
   
-
+___
 #### getReward/
 HOST:PORT/getReward?uid=12344565&amount=23.0000
 
@@ -123,7 +125,7 @@ If the transaction is executed successfully, a json structures will return indic
 {"action": "transaction executed successfully"}
 
   
-
+___
 #### getHint/
 HOST:PORT/getReward?uid=12344565&amount=23.000
 
@@ -142,7 +144,7 @@ If the transaction is executed successfully, a json structures will return indic
 {"action": "transaction executed successfully"}
 
   
-
+___
 #### createMatch/
 HOST:PORT/getReward?uid=12344565password=123&symbol=MI&maximum=100000.0000
 
