@@ -81,104 +81,46 @@ The response of the API should look like the following JSON structure:
 
 #### getScores/
 
-  
+54.163.3.27:5000/getScores
 
-[54.163.3.27:5000/](http://54.163.3.27:5000/)getScores
-
-  
-
+ ##### Description
 This endpoint should return a json structure containing the players info.
 
 The response of the API should look like the following JSON structure:
 
   
 
-[
-
-{
-
-"name":"Luis Araneda",
-
-"balance":"178.0000"
-
-},
-
-{
-
-"name":"Nicole Stackmann",
-
-"balance":"143.0000"
-
-},
-
-{
-
-"name":"Juan Pablo Safie",
-
+[{"name":"Luis Araneda",
+"balance":"178.0000"},
+{"name":"Nicole Stackmann",
+"balance":"143.0000"},
+{"name":"Juan Pablo Safie",
 "balance":"99.0000"
-
-},
-
-{
-
-"name":"Astrid Morales",
-
-"balance":"66.0000"
-
-},
-
-{
-
-"name":"Alejandro Melgar",
-
-"balance":"17.0000"
-
-}
-
-]
+}]
 
   
-  
-  
-
-getBalance
+#### getBalance/
 
   
+54.163.3.27:5000/getBalance?uid=12312312312
 
-[54.163.3.27:5000/getBalance?uid=12312312312](http://54.163.3.27:5000/getBalance?uid=12312312312)
-
-  
-
-Description
-
-  
-
+##### Description
 Returns the balance of tokens for the provided uid.
 
-  
-
-Response
-
-  
+##### Response
 
 {“balance”:19.0000} or {“balance”:0.0000}
 
   
   
 
-getReward
+#### getReward/
+54.163.3.27:5000/getReward?uid=12344565&amount=23.0000
 
-[http://54.163.3.27:5000/getReward?uid=12344565](http://54.163.3.27:5000/getReward?uid=12344565)&amount=23.0000
 
-  
-
-Description
-
+##### Description
 If the transaction is executed successfully, a json structures will return indicating it, but if not the json will contain the error.
-
-  
-
-Response
+##### Response
 
   
 
@@ -186,19 +128,19 @@ Response
 
   
 
-getHint
+#### getHint/
 
-[http://54.163.3.27:5000/getHint?uid=12344565](http://54.163.3.27:5000/getReward?uid=12344565)&amount=23.000
+54.163.3.27:5000/getReward?uid=12344565&amount=23.000
 
   
 
-Description
+##### Description
 
 If the transaction is executed successfully, a json structures will return indicating it, but if not the json will contain the error.
 
   
 
-Response
+##### Response
 
   
 
@@ -206,26 +148,22 @@ Response
 
   
 
-createMatch
+#### createMatch/
+
+54.163.3.27:5000/getReward?uid=12344565password=123&symbol=MI&maximum=100000.0000
 
   
 
-[http://54.163.3.27:5000/createMatch?](http://54.163.3.27:5000/getReward?uid=12344565)password=123&symbol=MI&maximum=100000.0000
-
-  
-
-Description
+##### Description
 
 This endpoint will create a new token based on the symbol and maximum parameter provided, it also will initialize its players table.
 
   
 
-Response
+##### Response
 
-  
-
+ 
 {"action":"match created successfully"}
-
 
 
 
