@@ -1,9 +1,18 @@
 from flask import Flask, request
 import subprocess
-app = Flask(__name__)
 import os.path
 import pandas as pd
+import numpy as np
 
+app = Flask(__name__)
+
+def unlockwallet():
+    unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password','PW5JgLRGuzXmZPKT27vq155hFnLWb1vkt5Ahci5idHaqmYKWVC78G'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    unlock_out, unlock_err = unlock_wallet.communicate()
+    return 1
+    # print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
+
+accounts = pd.read_csv('accounts.csv')
 
 @app.route('/')
 def hello_world():
@@ -11,11 +20,10 @@ def hello_world():
 
 @app.route('/createAccount')
 def createAccount():
+    unlockwallet()
     email = str(request.args.get('email'))
     account = request.args.get('account')
     if(email != None and account != None):
-        # validate email or account exists in contract and return the keys in case it exists
-
         #create keys
         create_keys = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'create', 'key', '-f', 'KeysUser.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         f = open(os.path.join("KeysUser.txt"), "r")
@@ -42,6 +50,7 @@ def createAccount():
 
 @app.route('/getScores')
 def getScores():
+    unlockwallet()
     response = [
 	      {  
 	         "name":"Luis Araneda",
@@ -69,16 +78,19 @@ def getScores():
 
 @app.route('/getBalance')
 def getBalance():
+    unlockwallet()
     return 'balance returned'
 
 @app.route('/transfer')
 def transfer():
+    unlockwallet()
     return 'transfer'
 
 @app.route('/createMatch')
 def createMatch():
+    unlockwallet()
     return 'creating Match :$'
-
+    
 
 if __name__ == '__main__':
     
@@ -89,11 +101,5 @@ if __name__ == '__main__':
     # init_keos_out, init_keos_err = init_keos.communicate()
     # print("paso")
     # print("keos init error") if(init_keos_err != None) else print("keos initilized")
-
-    # # unlock default wallet
-    # lock_wallet = subprocess.Popen(['cleos', 'wallet', 'lock'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
-    # unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password','PW5KCH1kz3L1WZDCy98Hrr8kur73T6KfFGHfLzYPb2bAVG4pHR5ns'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
-    # unlock_out, unlock_err = unlock_wallet.communicate()
-    # print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
 
     app.run(debug=True, port = 5000, host= '0.0.0.0')
