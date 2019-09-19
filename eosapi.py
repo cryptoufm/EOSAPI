@@ -16,7 +16,7 @@ def transfer(account, amount):
     global accounts_df
     unlockwallet()
     transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-    '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  UFM", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  UF", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     transfer_out, transfer_err = transfer.communicate()
     if (str(transfer_out).find("transaction executed") >= 0):
         return 1
@@ -27,9 +27,9 @@ def balance(account):
     global accounts_df
     unlockwallet()
     get_balance = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'get', 'currency', 'balance',
-    'smurfalexp24', str(account) ,'UFM'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    'smurfalexp24', str(account) ,'UF'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     get_balance_out, get_balance_err = get_balance.communicate()
-    if(str(get_balance_out.decode()).find("UFM") >= 0):
+    if(str(get_balance_out.decode()).find("UF") >= 0):
         return str(get_balance_out)[2:-7]
     else:
         return "0.0000"
@@ -117,9 +117,9 @@ def getBalance():
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         get_balance = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'get', 'currency', 'balance',
-        'smurfalexp24', str(account) ,'UFM'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        'smurfalexp24', str(account) ,'UF'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         get_balance_out, get_balance_err = get_balance.communicate()
-        if(str(get_balance_out.decode()).find("UFM") >= 0):
+        if(str(get_balance_out.decode()).find("UF") >= 0):
             response = {"balance":str(get_balance_out)[2:-3]}
         else:
             response = {"balance":"0.0000"}
@@ -138,7 +138,7 @@ def getReward():
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-        '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  UFM", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  UF", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
         transfer_out, transfer_err = transfer.communicate()
         if (str(transfer_out).find("transaction executed") >= 0):
             response = {"action":"transaction executed successfully"}
@@ -160,7 +160,7 @@ def getHint():
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-        '[ '+str(account)+', smurfalexp24,  "'+ str(amount)+'  UFM", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        '[ '+str(account)+', smurfalexp24,  "'+ str(amount)+'  UF", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
         transfer_out, transfer_err = transfer.communicate()
         if (str(transfer_out).find("transaction executed") >= 0):
             response = {"action":"transaction executed successfully"}
