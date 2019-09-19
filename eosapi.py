@@ -3,6 +3,7 @@ import subprocess
 import os.path
 import pandas as pd
 import numpy as np
+import rstr
 
 app = Flask(__name__)
 
@@ -12,7 +13,7 @@ def unlockwallet():
     return 1
     # print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
 
-accounts = pd.read_csv('accounts.csv')
+accounts_df = pd.read_csv('accounts.csv')
 
 @app.route('/')
 def hello_world():
@@ -20,36 +21,60 @@ def hello_world():
 
 @app.route('/createAccount')
 def createAccount():
+    global accounts_df
     unlockwallet()
-    email = str(request.args.get('email'))
-    account = request.args.get('account')
-    if(email != None and account != None):
-        #create keys
-        create_keys = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'create', 'key', '-f', 'KeysUser.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        f = open(os.path.join("KeysUser.txt"), "r")
-        private_key = f.readline()[13:-1]
-        public_key = f.readline()[12:-1]
-        # create user
-        create_user = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80','system','newaccount','--stake-net','5.0000 EOS','--stake-cpu','5.0000 EOS', 
-        '--buy-ram-kbytes','4','ricardojmv53',str(account),'EOS6YeWnZDHYgtHDvTuqq5NDW3kiCKSoKZQLv8BhppSMjM3uLuoRR',str(public_key)],stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        create_user_out, create_user_err = create_user.communicate()
-        f=open("NewAccount.txt", "w+")
-        f.write(str(create_user_out))
-        if (str(create_user_out).find("Account name already exists") >= 0):
-            response = {"error":"account already exist in jungle"}
-        elif (str(create_user_out).find("transaction executed") >= 0):
-            response = {'account': account,
-                        'private_key':private_key,
-                        'public_key':public_key
-                        }
+    uid = str(request.args.get('uid'))
+    username = str(request.args.get('username'))
+    if(uid != None):
+
+        if (uid in np.array(accounts_df['uid'])):
+            index = list(accounts_df['uid']).index(uid)
+            response = str({
+                "username": str(accounts_df['username'].iloc[index]),
+                "privatekey": str(accounts_df['privatekey'].iloc[index]),
+                "publickey": str(accounts_df['publickey'].iloc[index])
+            })
         else:
-            response = {'error':create_user_out}
-        return str(response)
+            #create keys
+            create_keys = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'create', 'key', '-f', 'KeysUser.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            f = open(os.path.join("KeysUser.txt"), "r")
+            private_key = f.readline()[13:-1]
+            public_key = f.readline()[12:-1]
+            # create account name in jungle
+            created = False
+            response = ""
+            while created == False:
+                account = rstr.rstr('abcdefghijklmnopqrtsuvwxyz12345',12)
+                create_user = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80','system','newaccount','--stake-net','5.0000 EOS','--stake-cpu','5.0000 EOS', 
+                '--buy-ram-kbytes','4','ricardojmv53',str(account),'EOS6YeWnZDHYgtHDvTuqq5NDW3kiCKSoKZQLv8BhppSMjM3uLuoRR',str(public_key)],stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                create_user_out, create_user_err = create_user.communicate()
+                f=open("NewAccount.txt", "w+")
+                f.write(str(create_user_out))
+                if (str(create_user_out).find("transaction executed") >= 0):
+                    response = {'username': str(account),
+                                'private_key':str(private_key),
+                                'public_key':str(public_key)
+                                }
+                    created = True
+                    #insert into account df
+                    accounts_df = accounts_df.append({'uid':uid,'username':username,'account':account,'privatekey':private_key,'publickey':public_key}, ignore_index=True)
+                    accounts_df.to_csv("accounts.csv")
+                elif (str(create_user_out).find("Account name already exists") >= 0):
+                    created = False
+                else:
+                    created = True
+                    reponse = {"error":"bad account generation"}
+        return str(response).replace("\'","\"")
     else:
-        return 'Missing account or email!'
+        return 'Missing uid!'
 
 @app.route('/getScores')
 def getScores():
+
+    #iterate the accounts['account'] to request the balance
+
+
+
     unlockwallet()
     response = [
 	      {  
