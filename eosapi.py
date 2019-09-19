@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 import subprocess
 import os.path
 import pandas as pd
@@ -8,7 +8,7 @@ import rstr
 app = Flask(__name__)
 
 def unlockwallet():
-    unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password','PW5JgLRGuzXmZPKT27vq155hFnLWb1vkt5Ahci5idHaqmYKWVC78G'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password','PW5KCH1kz3L1WZDCy98Hrr8kur73T6KfFGHfLzYPb2bAVG4pHR5ns'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     unlock_out, unlock_err = unlock_wallet.communicate()
     return 1
     # print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
@@ -17,7 +17,7 @@ def transfer(account, amount):
     global accounts_df
     unlockwallet()
     transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-    '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  NNN", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  CCC", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     transfer_out, transfer_err = transfer.communicate()
     if (str(transfer_out).find("transaction executed") >= 0):
         return 1
@@ -28,10 +28,10 @@ def balance(account):
     global accounts_df
     unlockwallet()
     get_balance = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'get', 'currency', 'balance',
-    'smurfalexp24', str(account) ,'NNN'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    'smurfalexp24', str(account) ,'CCC'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     get_balance_out, get_balance_err = get_balance.communicate()
-    if(str(get_balance_out.decode()).find("NNN") >= 0):
-        return str(get_balance_out)[2:-3]
+    if(str(get_balance_out.decode()).find("CCC") >= 0):
+        return str(get_balance_out)[2:-7]
     else:
         return "0.0000"
 
@@ -92,7 +92,7 @@ def createAccount():
                     created = True
                     reponse = {"error":"bad account generation"}
             #enviar dinero
-            # initial = transfer(account, "100.0000")
+            initial = transfer(account, "200.0000")
             #importar a wallet
             import_key = subprocess.Popen(['cleos', 'wallet', 'import', '--private-key', str(private_key)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -118,13 +118,12 @@ def getBalance():
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         get_balance = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'get', 'currency', 'balance',
-        'smurfalexp24', str(account) ,'NNN'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        'smurfalexp24', str(account) ,'CCC'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         get_balance_out, get_balance_err = get_balance.communicate()
-        if(str(get_balance_out.decode()).find("NNN") >= 0):
+        if(str(get_balance_out.decode()).find("CCC") >= 0):
             response = {"balance":str(get_balance_out)[2:-3]}
         else:
-            print("no hay")
-            response = {"balance":"0.0000 NNN"}
+            response = {"balance":"0.0000"}
     else:
         response = {"error":"uid missing"}
     response = str(response).replace("\'","\"")
@@ -140,7 +139,7 @@ def getReward():
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-        '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  NNN", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  CCC", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
         transfer_out, transfer_err = transfer.communicate()
         if (str(transfer_out).find("transaction executed") >= 0):
             response = {"action":"transaction executed successfully"}
@@ -162,7 +161,7 @@ def getHint():
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-        '[ '+str(account)+', smurfalexp24,  "'+ str(amount)+'  NNN", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        '[ '+str(account)+', smurfalexp24,  "'+ str(amount)+'  CCC", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
         transfer_out, transfer_err = transfer.communicate()
         if (str(transfer_out).find("transaction executed") >= 0):
             response = {"action":"transaction executed successfully"}
@@ -176,9 +175,39 @@ def getHint():
 
 @app.route('/createMatch')
 def createMatch():
-    unlockwallet()
-    return 'creating Match :$'
+    global accounts_df
+    password = str(request.args.get('password'))
+    symbol = str(request.args.get('symbol'))
+    maximum = str(request.args.get('maximum'))
     
+    if(password == "Queteimporta123" and symbol != None and maximum != None):
+        unlockwallet()
+        new_token = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push','action', 'smurfalexp24','create',
+        '[ smurfalexp24, "'+str(maximum)+' '+str(symbol)+'"]','-p','smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        new_token_out, new_token_err = new_token.communicate()
+        if (str(new_token_out).find("transaction executed") >= 0):
+            issue = subprocess.Popen(['cleos','-u','http://jungle2.cryptolions.io:80','push','action','smurfalexp24','issue',
+            '[ smurfalexp24, "'+str(maximum)+' '+str(symbol)+'", "issue tokens"]','-p','smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            issue_out, issue_err = issue.communicate()
+            if (str(issue_out).find("transaction executed") >= 0):
+                accounts_df = accounts_df.iloc[0:0]
+                accounts_df.to_csv("accounts.csv", index=False)
+                response = {"action":"match created successfully"}
+            else:
+                response = {"error":"error issuing tokens"}
+        else:
+            response = {"error": new_token_out}
+        
+    response = str(response).replace("\'","\"")
+    return response
+    
+@app.route('/getMatch')
+def getMatch():
+    global accounts_df
+    # try:
+    return send_file(os.path.join("~/accounts.csv"))
+    # except:
+        # return "Unable to send match file."
 
 if __name__ == '__main__':
     
