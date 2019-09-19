@@ -11,7 +11,6 @@ def unlockwallet():
     unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password','PW5KCH1kz3L1WZDCy98Hrr8kur73T6KfFGHfLzYPb2bAVG4pHR5ns'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     unlock_out, unlock_err = unlock_wallet.communicate()
     return 1
-    # print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
 
 def transfer(account, amount):
     global accounts_df
