@@ -62,7 +62,7 @@ def createAccount():
                 elif (str(create_user_out).find("Account name already exists") >= 0):
                     created = False
                 elif (str(create_user_out).find("Account using more than allotted RAM") >= 0):
-                    create True
+                    created = True
                     response = {"error": "insuficiente RAM to create accounts"}
                 else:
                     created = True
