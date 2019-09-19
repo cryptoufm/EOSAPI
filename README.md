@@ -53,15 +53,11 @@ Run the eosapi.py file
 python3 eosapi.py
 ```
 
-## Endpoints
-HOST: 0.0.0.0
-PORT: 5000
-
-### Functions
+## Functions
 
 #### createAccount/
 
-54.163.3.27:5000/createAccount?uid=8khblsffwn343224&username=myaccount123
+HOST:PORT/createAccount?uid=8khblsffwn343224&username=myaccount123
 
 ##### Description
 
@@ -81,7 +77,7 @@ The response of the API should look like the following JSON structure:
 
 #### getScores/
 
-54.163.3.27:5000/getScores
+HOST:PORT/getScores
 
  ##### Description
 This endpoint should return a json structure containing the players info.
@@ -102,7 +98,7 @@ The response of the API should look like the following JSON structure:
 #### getBalance/
 
   
-54.163.3.27:5000/getBalance?uid=12312312312
+HOST:PORT/getBalance?uid=12312312312
 
 ##### Description
 Returns the balance of tokens for the provided uid.
@@ -115,7 +111,7 @@ Returns the balance of tokens for the provided uid.
   
 
 #### getReward/
-54.163.3.27:5000/getReward?uid=12344565&amount=23.0000
+HOST:PORT/getReward?uid=12344565&amount=23.0000
 
 
 ##### Description
@@ -129,8 +125,7 @@ If the transaction is executed successfully, a json structures will return indic
   
 
 #### getHint/
-
-54.163.3.27:5000/getReward?uid=12344565&amount=23.000
+HOST:PORT/getReward?uid=12344565&amount=23.000
 
   
 
@@ -149,8 +144,7 @@ If the transaction is executed successfully, a json structures will return indic
   
 
 #### createMatch/
-
-54.163.3.27:5000/getReward?uid=12344565password=123&symbol=MI&maximum=100000.0000
+HOST:PORT/getReward?uid=12344565password=123&symbol=MI&maximum=100000.0000
 
   
 
@@ -164,6 +158,7 @@ This endpoint will create a new token based on the symbol and maximum parameter 
 
  
 {"action":"match created successfully"}
+
 
 
 
