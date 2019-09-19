@@ -13,6 +13,29 @@ def unlockwallet():
     return 1
     # print("unlocking wallet error") if(unlock_out.decode()[-18:-1] != 'Unlocked: default') else print("wallet unlocked")
 
+def transfer(account, amount):
+    global accounts_df
+    unlockwallet()
+    transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
+    '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  NNN", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    transfer_out, transfer_err = transfer.communicate()
+    if (str(transfer_out).find("transaction executed") >= 0):
+        return 1
+    else:
+        return 0
+
+def balance(account):
+    global accounts_df
+    unlockwallet()
+    get_balance = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'get', 'currency', 'balance',
+    'smurfalexp24', str(account) ,'NNN'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    get_balance_out, get_balance_err = get_balance.communicate()
+    if(str(get_balance_out.decode()).find("NNN") >= 0):
+        return str(get_balance_out)[2:-3]
+    else:
+        return "0.0000"
+
+
 accounts_df = pd.read_csv('accounts.csv')
 
 @app.route('/')
@@ -34,6 +57,7 @@ def createAccount():
                 "privatekey": str(accounts_df['privatekey'].iloc[index]),
                 "publickey": str(accounts_df['publickey'].iloc[index])
             })
+            
         else:
             #create keys
             create_keys = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'create', 'key', '-f', 'KeysUser.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -45,20 +69,20 @@ def createAccount():
             response = ""
             while created == False:
                 account = rstr.rstr('abcdefghijklmnopqrtsuvwxyz12345',12)
-                create_user = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80','system','newaccount','--stake-net','5.0000 EOS','--stake-cpu','5.0000 EOS', 
-                '--buy-ram-kbytes','4','ricardojmv53',str(account),'EOS6YeWnZDHYgtHDvTuqq5NDW3kiCKSoKZQLv8BhppSMjM3uLuoRR',str(public_key)],stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                create_user = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80','system','newaccount','--stake-net','2.0000 EOS','--stake-cpu','2.0000 EOS', 
+                '--buy-ram-kbytes','2','ricardojmv53',str(account),'EOS6YeWnZDHYgtHDvTuqq5NDW3kiCKSoKZQLv8BhppSMjM3uLuoRR',str(public_key)],stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 create_user_out, create_user_err = create_user.communicate()
                 f=open("NewAccount.txt", "w+")
                 f.write(str(create_user_out))
                 if (str(create_user_out).find("transaction executed") >= 0):
-                    response = {'username': str(account),
+                    response = {'username': str(username),
                                 'private_key':str(private_key),
                                 'public_key':str(public_key)
                                 }
                     created = True
                     #insert into account df
                     accounts_df = accounts_df.append({'uid':uid,'username':username,'account':account,'privatekey':private_key,'publickey':public_key}, ignore_index=True)
-                    accounts_df.to_csv("accounts.csv")
+                    accounts_df.to_csv("accounts.csv", index= False)
                 elif (str(create_user_out).find("Account name already exists") >= 0):
                     created = False
                 elif (str(create_user_out).find("Account using more than allotted RAM") >= 0):
@@ -67,49 +91,88 @@ def createAccount():
                 else:
                     created = True
                     reponse = {"error":"bad account generation"}
+            #enviar dinero
+            # initial = transfer(account, "100.0000")
+            #importar a wallet
+            import_key = subprocess.Popen(['cleos', 'wallet', 'import', '--private-key', str(private_key)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
         return str(response).replace("\'","\"")
     else:
         return 'Missing uid!'
 
 @app.route('/getScores')
 def getScores():
-
-    #iterate the accounts['account'] to request the balance
+    global accounts_df
+    temp_df = accounts_df[['username','account']]
     unlockwallet()
-    response = [
-	      {  
-	         "name":"Luis Araneda",
-	         "balance":"178.00"
-	      },
-	      {  
-	         "name":"Nicole Stackmann",
-	         "balance":"143.00"
-	      },
-	      {  
-	         "name":"Juan Pablo Safie",
-	         "balance":"99.00"	
-	      },
-	      {  
-	         "name":"Astrid Morales",
-	         "balance":"66.00"
-	      },
-	      {  
-	         "name":"Alejandro Melgar",
-	         "balance":"17.00"
-	      }
-	]
+    response = [{"name":temp_df['username'].loc[index], "balance":balance(temp_df['account'].loc[index])} for index in range(temp_df.shape[0])]
     response = str(response).replace("\'","\"")
     return response
 
 @app.route('/getBalance')
 def getBalance():
+    global accounts_df
+    uid = str(request.args.get('uid'))
     unlockwallet()
-    return 'balance returned'
+    if (uid != None):
+        index = list(accounts_df['uid']).index(uid)
+        account = str(accounts_df['account'].iloc[index])
+        get_balance = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'get', 'currency', 'balance',
+        'smurfalexp24', str(account) ,'NNN'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        get_balance_out, get_balance_err = get_balance.communicate()
+        if(str(get_balance_out.decode()).find("NNN") >= 0):
+            response = {"balance":str(get_balance_out)[2:-3]}
+        else:
+            print("no hay")
+            response = {"balance":"0.0000 NNN"}
+    else:
+        response = {"error":"uid missing"}
+    response = str(response).replace("\'","\"")
+    return response
 
-@app.route('/transfer')
-def transfer():
+@app.route('/getReward')
+def getReward():
+    global accounts_df
+    uid = str(request.args.get('uid'))
+    amount = str(request.args.get('amount'))
     unlockwallet()
-    return 'transfer'
+    if (uid != None and amount!= None):
+        index = list(accounts_df['uid']).index(uid)
+        account = str(accounts_df['account'].iloc[index])
+        transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
+        '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  NNN", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        transfer_out, transfer_err = transfer.communicate()
+        if (str(transfer_out).find("transaction executed") >= 0):
+            response = {"action":"transaction executed successfully"}
+        else:
+            response = {"error": transfer_out}
+    else:
+        response = {"error":"uid or amount missing"}
+
+    response = str(response).replace("\'","\"")
+    return response
+
+@app.route('/getHint')
+def getHint():
+    global accounts_df
+    uid = str(request.args.get('uid'))
+    amount = str(request.args.get('amount'))
+    unlockwallet()
+    if (uid != None and amount!= None):
+        index = list(accounts_df['uid']).index(uid)
+        account = str(accounts_df['account'].iloc[index])
+        transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
+        '[ '+str(account)+', smurfalexp24,  "'+ str(amount)+'  NNN", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        transfer_out, transfer_err = transfer.communicate()
+        if (str(transfer_out).find("transaction executed") >= 0):
+            response = {"action":"transaction executed successfully"}
+        else:
+            response = {"error": transfer_out}
+    else:
+        response = {"error":"uid or amount missing"}
+
+    response = str(response).replace("\'","\"")
+    return response
 
 @app.route('/createMatch')
 def createMatch():
