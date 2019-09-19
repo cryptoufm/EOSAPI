@@ -61,6 +61,9 @@ def createAccount():
                     accounts_df.to_csv("accounts.csv")
                 elif (str(create_user_out).find("Account name already exists") >= 0):
                     created = False
+                elif (str(create_user_out).find("Account using more than allotted RAM") >= 0):
+                    create True
+                    response = {"error": "insuficiente RAM to create accounts"}
                 else:
                     created = True
                     reponse = {"error":"bad account generation"}
@@ -72,9 +75,6 @@ def createAccount():
 def getScores():
 
     #iterate the accounts['account'] to request the balance
-
-
-
     unlockwallet()
     response = [
 	      {  
