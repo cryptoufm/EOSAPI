@@ -2,9 +2,7 @@ from flask import Flask, request
 import subprocess
 app = Flask(__name__)
 import os.path
-
-
-
+import pandas as pd
 
 
 @app.route('/')
@@ -66,7 +64,8 @@ def getScores():
 	         "balance":"17.00"
 	      }
 	]
-    return str(response)
+    response = str(response).replace("\'","\"")
+    return response
 
 @app.route('/getBalance')
 def getBalance():
@@ -76,9 +75,13 @@ def getBalance():
 def transfer():
     return 'transfer'
 
+@app.route('/createMatch')
+def createMatch():
+    return 'creating Match :$'
+
 
 if __name__ == '__main__':
-
+    
     # # init keos after
     # kill_keos = subprocess.Popen(['pkill', 'keosd'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     # kill_keos_out, kill_keos_err = kill_keos.communicate()
