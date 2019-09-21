@@ -4,19 +4,23 @@ import os.path
 import pandas as pd
 import numpy as np
 import rstr
+import yaml
 
 app = Flask(__name__)
+ 
+config = yaml.load(open("configuration.yml", "r"), Loader=yaml.FullLoader)
+accounts_df = pd.read_csv('accounts.csv')
 
 def unlockwallet():
-    unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password','PW5KCH1kz3L1WZDCy98Hrr8kur73T6KfFGHfLzYPb2bAVG4pHR5ns'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password',str(config['WALLETPASSWORD'])], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     unlock_out, unlock_err = unlock_wallet.communicate()
     return 1
 
-def transfer(account, amount):
+def transfer(account, amount, message=None):
     global accounts_df
     unlockwallet()
     transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-    '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  UF", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  UF", '+str(message)+']', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     transfer_out, transfer_err = transfer.communicate()
     if (str(transfer_out).find("transaction executed") >= 0):
         return 1
@@ -35,7 +39,7 @@ def balance(account):
         return "0.0000"
 
 
-accounts_df = pd.read_csv('accounts.csv')
+
 
 @app.route('/')
 def hello_world():
@@ -43,23 +47,25 @@ def hello_world():
 
 @app.route('/createAccount')
 def createAccount():
-    global accounts_df
+    global accounts_df, config
     unlockwallet()
     uid = str(request.args.get('uid'))
     username = str(request.args.get('username'))
+    amount = str(request.args.get('amount'))
     if(uid != None):
 
         if (uid in np.array(accounts_df['uid'])):
             index = list(accounts_df['uid']).index(uid)
             response = str({
                 "username": str(accounts_df['username'].iloc[index]),
+                "account": str(accounts_df['account'].iloc[index]),
                 "privatekey": str(accounts_df['privatekey'].iloc[index]),
                 "publickey": str(accounts_df['publickey'].iloc[index])
             })
             
         else:
             #create keys
-            create_keys = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'create', 'key', '-f', 'KeysUser.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            create_keys = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'create', 'key', '-f', 'KeysUser.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             f = open(os.path.join("KeysUser.txt"), "r")
             private_key = f.readline()[13:-1]
             public_key = f.readline()[12:-1]
@@ -67,16 +73,17 @@ def createAccount():
             created = False
             response = ""
             while created == False:
-                account = rstr.rstr('abcdefghijklmnopqrtsuvwxyz12345',12)
-                create_user = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80','system','newaccount','--stake-net','2.0000 EOS','--stake-cpu','2.0000 EOS', 
-                '--buy-ram-kbytes','2','ricardojmv53',str(account),'EOS6YeWnZDHYgtHDvTuqq5NDW3kiCKSoKZQLv8BhppSMjM3uLuoRR',str(public_key)],stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                account = username[:6]+str(rstr.rstr('abcdefghijklmnopqrtsuvwxyz12345',6))
+                create_user = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']),'system','newaccount','--stake-net','2.0000 EOS','--stake-cpu','2.0000 EOS', 
+                '--buy-ram-kbytes','2',str(config['ACCOUNTSGENERATOR']),str(account),str(config['ACCOUNTSGENERATORPASSWORD']),str(public_key)],stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 create_user_out, create_user_err = create_user.communicate()
                 f=open("NewAccount.txt", "w+")
                 f.write(str(create_user_out))
                 if (str(create_user_out).find("transaction executed") >= 0):
                     response = {'username': str(username),
                                 'private_key':str(private_key),
-                                'public_key':str(public_key)
+                                'public_key':str(public_key),
+                                'account': str(account)
                                 }
                     created = True
                     #insert into account df
@@ -91,7 +98,7 @@ def createAccount():
                     created = True
                     reponse = {"error":"bad account generation"}
             #enviar dinero
-            initial = transfer(account, "200.0000")
+            initial = transfer(account, amount, 'Initial deposit')
             #importar a wallet
             import_key = subprocess.Popen(['cleos', 'wallet', 'import', '--private-key', str(private_key)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -110,14 +117,14 @@ def getScores():
 
 @app.route('/getBalance')
 def getBalance():
-    global accounts_df
+    global accounts_df, config
     uid = str(request.args.get('uid'))
     unlockwallet()
     if (uid != None):
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
-        get_balance = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'get', 'currency', 'balance',
-        'smurfalexp24', str(account) ,'UF'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        get_balance = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'get', 'currency', 'balance',
+        str(config['CONTRACTOWNER']), str(account) ,'UF'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         get_balance_out, get_balance_err = get_balance.communicate()
         if(str(get_balance_out.decode()).find("UF") >= 0):
             response = {"balance":str(get_balance_out)[2:-3]}
@@ -137,8 +144,8 @@ def getReward():
     if (uid != None and amount!= None):
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
-        transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-        '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  UF", reward]', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        transfer = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push', 'action', str(config['CONTRACTOWNER']), 'transfer', 
+        '[ '+str(config['CONTRACTOWNER'])+', '+str(account)+', "'+ str(amount)+'  UF", reward]', '-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
         transfer_out, transfer_err = transfer.communicate()
         if (str(transfer_out).find("transaction executed") >= 0):
             response = {"action":"transaction executed successfully"}
@@ -159,8 +166,8 @@ def getHint():
     if (uid != None and amount!= None):
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
-        transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-        '[ '+str(account)+', smurfalexp24,  "'+ str(amount)+'  UF", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        transfer = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push', 'action', str(config['CONTRACTOWNER']), 'transfer', 
+        '[ '+str(account)+', '+str(config['CONTRACTOWNER'])+',  "'+ str(amount)+'  UF", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
         transfer_out, transfer_err = transfer.communicate()
         if (str(transfer_out).find("transaction executed") >= 0):
             response = {"action":"transaction executed successfully"}
@@ -181,12 +188,12 @@ def createMatch():
     
     if(password == "Queteimporta123" and symbol != None and maximum != None):
         unlockwallet()
-        new_token = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push','action', 'smurfalexp24','create',
-        '[ smurfalexp24, "'+str(maximum)+' '+str(symbol)+'"]','-p','smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        new_token = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push','action', str(config['CONTRACTOWNER']),'create',
+        '[ '+str(config['CONTRACTOWNER'])+', "'+str(maximum)+' '+str(symbol)+'"]','-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         new_token_out, new_token_err = new_token.communicate()
         if (str(new_token_out).find("transaction executed") >= 0):
-            issue = subprocess.Popen(['cleos','-u','http://jungle2.cryptolions.io:80','push','action','smurfalexp24','issue',
-            '[ smurfalexp24, "'+str(maximum)+' '+str(symbol)+'", "issue tokens"]','-p','smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            issue = subprocess.Popen(['cleos','-u',str(config['JUNGLEENDPOINT']),'push','action',str(config['CONTRACTOWNER']),'issue',
+            '[ '+str(config['CONTRACTOWNER'])+', "'+str(maximum)+' '+str(symbol)+'", "issue tokens"]','-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             issue_out, issue_err = issue.communicate()
             if (str(issue_out).find("transaction executed") >= 0):
                 accounts_df = accounts_df.iloc[0:0]
@@ -204,18 +211,10 @@ def createMatch():
 def getMatch():
     global accounts_df
     # try:
-    return send_file(os.path.join("~/accounts.csv"))
+    return send_file(os.path.join("accounts.csv"))
     # except:
         # return "Unable to send match file."
 
 if __name__ == '__main__':
     
-    # # init keos after
-    # kill_keos = subprocess.Popen(['pkill', 'keosd'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
-    # kill_keos_out, kill_keos_err = kill_keos.communicate()
-    # init_keos = subprocess.Popen(['keosd', '&'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  
-    # init_keos_out, init_keos_err = init_keos.communicate()
-    # print("paso")
-    # print("keos init error") if(init_keos_err != None) else print("keos initilized")
-
     app.run(debug=True, port = 5000, host= '0.0.0.0')
