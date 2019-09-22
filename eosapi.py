@@ -19,8 +19,8 @@ def unlockwallet():
 def transfer(account, amount, message=None):
     global accounts_df
     unlockwallet()
-    transfer = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'push', 'action', 'smurfalexp24', 'transfer', 
-    '[ smurfalexp24, '+str(account)+', "'+ str(amount)+'  UF", '+str(message)+']', '-p', 'smurfalexp24@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    transfer = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push', 'action', str(config['CONTRACTOWNER']), 'transfer', 
+    '[ '+str(config['CONTRACTOWNER'])+', '+str(account)+', "'+ str(amount)+'  UF", '+str(message)+']', '-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     transfer_out, transfer_err = transfer.communicate()
     if (str(transfer_out).find("transaction executed") >= 0):
         return 1
@@ -30,8 +30,8 @@ def transfer(account, amount, message=None):
 def balance(account):
     global accounts_df
     unlockwallet()
-    get_balance = subprocess.Popen(['cleos', '-u', 'http://jungle2.cryptolions.io:80', 'get', 'currency', 'balance',
-    'smurfalexp24', str(account) ,'UF'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    get_balance = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'get', 'currency', 'balance',
+    str(config['CONTRACTOWNER']), str(account) ,'UF'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     get_balance_out, get_balance_err = get_balance.communicate()
     if(str(get_balance_out.decode()).find("UF") >= 0):
         return str(get_balance_out)[2:-7]
