@@ -20,7 +20,7 @@ def transfer(account, amount, message=None):
     global accounts_df
     unlockwallet()
     transfer = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push', 'action', str(config['CONTRACTOWNER']), 'transfer', 
-    '[ '+str(config['CONTRACTOWNER'])+', '+str(account)+', "'+ str(amount)+'  UF", '+str(message)+']', '-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+    '[ '+str(config['CONTRACTOWNER'])+', '+str(account)+', "'+ str(amount)+'  '+str(config['TOKEN'])+'", '+str(message)+']', '-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
     transfer_out, transfer_err = transfer.communicate()
     if (str(transfer_out).find("transaction executed") >= 0):
         return 1
@@ -31,9 +31,9 @@ def balance(account):
     global accounts_df
     unlockwallet()
     get_balance = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'get', 'currency', 'balance',
-    str(config['CONTRACTOWNER']), str(account) ,'UF'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    str(config['CONTRACTOWNER']), str(account) ,str(config['TOKEN'])], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     get_balance_out, get_balance_err = get_balance.communicate()
-    if(str(get_balance_out.decode()).find("UF") >= 0):
+    if(str(get_balance_out.decode()).find(str(config['TOKEN'])) >= 0):
         return str(get_balance_out)[2:-7]
     else:
         return "0.0000"
@@ -124,9 +124,9 @@ def getBalance():
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         get_balance = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'get', 'currency', 'balance',
-        str(config['CONTRACTOWNER']), str(account) ,'UF'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        str(config['CONTRACTOWNER']), str(account) , str(config['TOKEN'])], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         get_balance_out, get_balance_err = get_balance.communicate()
-        if(str(get_balance_out.decode()).find("UF") >= 0):
+        if(str(get_balance_out.decode()).find(str(config['TOKEN'])) >= 0):
             response = {"balance":str(get_balance_out)[2:-3]}
         else:
             response = {"balance":"0.0000"}
@@ -145,7 +145,7 @@ def getReward():
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         transfer = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push', 'action', str(config['CONTRACTOWNER']), 'transfer', 
-        '[ '+str(config['CONTRACTOWNER'])+', '+str(account)+', "'+ str(amount)+'  UF", reward]', '-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        '[ '+str(config['CONTRACTOWNER'])+', '+str(account)+', "'+ str(amount)+'  '+str(config['TOKEN'])+'", reward]', '-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
         transfer_out, transfer_err = transfer.communicate()
         if (str(transfer_out).find("transaction executed") >= 0):
             response = {"action":"transaction executed successfully"}
@@ -167,7 +167,7 @@ def getHint():
         index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         transfer = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push', 'action', str(config['CONTRACTOWNER']), 'transfer', 
-        '[ '+str(account)+', '+str(config['CONTRACTOWNER'])+',  "'+ str(amount)+'  UF", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
+        '[ '+str(account)+', '+str(config['CONTRACTOWNER'])+',  "'+ str(amount)+'  '+str(config['TOKEN'])+'", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
         transfer_out, transfer_err = transfer.communicate()
         if (str(transfer_out).find("transaction executed") >= 0):
             response = {"action":"transaction executed successfully"}
