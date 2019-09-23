@@ -215,6 +215,21 @@ def getMatch():
     # except:
         # return "Unable to send match file."
 
+
+@app.route('/getProfile')
+def getProfile():
+    global accounts_df, config
+    uid = str(request.args.get('uid'))
+    if uid in list(accounts_df['uid']):
+        index = list(accounts_df['uid']).index(uid)
+        response = {"account": accounts_df['account'].loc[index],
+                    "privatekey": accounts_df['privatekey'].loc[index],
+                    "balance": balance(accounts_df['account'].loc[index])}
+    else:
+        response = {"error": "uid not in match"}
+    return str(response).replace("\'","\"")
+
+
 if __name__ == '__main__':
     
     app.run(debug=True, port = 5000, host= '0.0.0.0')
