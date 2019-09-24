@@ -107,13 +107,17 @@ def createAccount():
 @app.route('/getScores')
 def getScores():
     match = str(request.args.set('match'))
-    accounts_df = openMatch(match)
-    temp_df = accounts_df[['username','account']]
-    unlockwallet()
-    response = [{"name":temp_df['username'].loc[index], "balance":balance(temp_df['account'].loc[index])} for index in range(temp_df.shape[0])]
-    response = sorted(response, key = lambda i: i['balance'],reverse=True) 
-    response = str(response).replace("\'","\"")
-    return response
+    files = os.listdir(os.getcwd())
+    if str(match+'.csv') in files:
+        accounts_df = openMatch(match)
+        temp_df = accounts_df[['username','account']]
+        unlockwallet()
+        response = [{"name":temp_df['username'].loc[index], "balance":balance(temp_df['account'].loc[index])} for index in range(temp_df.shape[0])]
+        response = sorted(response, key = lambda i: i['balance'],reverse=True) 
+    else:
+        {"error":"match not found"}
+    return str(response).replace("\'","\"")
+        
 
 @app.route('/getBalance')
 def getBalance():
@@ -218,7 +222,7 @@ def getMatch():
     match = str(request.args.get('match'))
     files = os.listdir(os.getcwd())
     if str(match+'.csv') in files:
-        return send_file(os.path.join(match+".csv))
+        return send_file(os.path.join(match+'.csv'))
     else:
         return {"error":"match not"}
 
