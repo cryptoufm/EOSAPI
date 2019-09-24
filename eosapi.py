@@ -10,6 +10,9 @@ app = Flask(__name__)
  
 config = yaml.load(open("configuration.yml", "r"), Loader=yaml.FullLoader)
 accounts_df = pd.read_csv('accounts.csv')
+def openMatch(number):
+    df = pd.read_csv(number+'.csv')
+    return df
 
 def unlockwallet():
     unlock_wallet = subprocess.Popen(['cleos', 'wallet', 'unlock','--password',str(config['WALLETPASSWORD'])], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
@@ -37,9 +40,6 @@ def balance(account):
         return str(get_balance_out)[2:-7]
     else:
         return "0.0000"
-
-
-
 
 @app.route('/')
 def hello_world():
@@ -97,8 +97,6 @@ def createAccount():
                 else:
                     created = True
                     reponse = {"error":"bad account generation"}
-            #enviar dinero
-            initial = transfer(account, amount, 'Initial deposit')
             #importar a wallet
             import_key = subprocess.Popen(['cleos', 'wallet', 'import', '--private-key', str(private_key)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -108,17 +106,21 @@ def createAccount():
 
 @app.route('/getScores')
 def getScores():
-    global accounts_df
+    match = str(request.args.set('match'))
+    accounts_df = openMatch(match)
     temp_df = accounts_df[['username','account']]
     unlockwallet()
     response = [{"name":temp_df['username'].loc[index], "balance":balance(temp_df['account'].loc[index])} for index in range(temp_df.shape[0])]
+    response = sorted(response, key = lambda i: i['balance'],reverse=True) 
     response = str(response).replace("\'","\"")
     return response
 
 @app.route('/getBalance')
 def getBalance():
-    global accounts_df, config
+    global config
     uid = str(request.args.get('uid'))
+    match = str(request.args.set('match'))
+    accounts_df = openMatch(match)
     unlockwallet()
     if (uid != None):
         index = list(accounts_df['uid']).index(uid)
@@ -137,9 +139,10 @@ def getBalance():
 
 @app.route('/getReward')
 def getReward():
-    global accounts_df
+    match = str(request.args.set('match'))
     uid = str(request.args.get('uid'))
     amount = str(request.args.get('amount'))
+    accounts_df = openMatch(match)
     unlockwallet()
     if (uid != None and amount!= None):
         index = list(accounts_df['uid']).index(uid)
@@ -159,9 +162,10 @@ def getReward():
 
 @app.route('/getHint')
 def getHint():
-    global accounts_df
+    match = str(request.args.set('match'))
     uid = str(request.args.get('uid'))
     amount = str(request.args.get('amount'))
+    accounts_df = openMatch(match)
     unlockwallet()
     if (uid != None and amount!= None):
         index = list(accounts_df['uid']).index(uid)
@@ -196,9 +200,10 @@ def createMatch():
             '[ '+str(config['CONTRACTOWNER'])+', "'+str(maximum)+' '+str(symbol)+'", "issue tokens"]','-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             issue_out, issue_err = issue.communicate()
             if (str(issue_out).find("transaction executed") >= 0):
-                accounts_df = accounts_df.iloc[0:0]
-                accounts_df.to_csv("accounts.csv", index=False)
-                response = {"action":"match created successfully"}
+                match = str(rstr.rstr('0123456789',10))
+                new_match = pd.DataFrame({'uid':[],'account':[],'start_time':[],'balance':[]})
+                new_match = pd.to_csv(match+'.csv')
+                response = {"match": match}
             else:
                 response = {"error":"error issuing tokens"}
         else:
@@ -210,10 +215,12 @@ def createMatch():
 @app.route('/getMatch')
 def getMatch():
     global accounts_df
-    # try:
-    return send_file(os.path.join("accounts.csv"))
-    # except:
-        # return "Unable to send match file."
+    match = str(request.args.get('match'))
+    files = os.listdir(os.getcwd())
+    if str(match+'.csv') in files:
+        return send_file(os.path.join(match+".csv))
+    else:
+        return {"error":"match not"}
 
 
 @app.route('/getProfile')
@@ -227,6 +234,27 @@ def getProfile():
                     "balance": balance(accounts_df['account'].loc[index])}
     else:
         response = {"error": "uid not in match"}
+    return str(response).replace("\'","\"")
+
+@app.route('/joinMatch')
+def joinMatch():
+    global accounts_df, config
+    uid = str(request.args.get('uid'))
+    match = str(request.args.get('match'))
+    time = str(request.args.get('time'))
+    files = os.listdir(os.getcwd())
+    if str(match+'.csv') in files:
+        df = openMatch(match)
+        if (uid in list(accounts_df['uid']) and uid not in df['uid']):
+            index = list(accounts_df['uid']).index(uid)
+            transfer(account, amount, 'Initial deposit')
+            df = df.append({'uid':uid,'account':accounts_df['account'].loc[index],'start_time':time,'balance':balance(uid)})
+            response = {"action": "user added to match"}
+            df.to_csv(match+'.csv')
+        else:
+            response = {"error":"uid not in accounts or uid already in match"}
+    else:
+        response = {"error": "match not found"}
     return str(response).replace("\'","\"")
 
 
