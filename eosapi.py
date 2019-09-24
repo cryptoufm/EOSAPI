@@ -206,7 +206,7 @@ def createMatch():
             if (str(issue_out).find("transaction executed") >= 0):
                 match = str(rstr.rstr('0123456789',10))
                 new_match = pd.DataFrame({'uid':[],'account':[],'start_time':[],'balance':[]})
-                new_match = pd.to_csv(match+'.csv')
+                new_match.to_csv(match+'.csv')
                 response = {"match": match}
             else:
                 response = {"error":"error issuing tokens"}
