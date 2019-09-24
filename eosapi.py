@@ -20,7 +20,7 @@ def unlockwallet():
     return 1
 
 def transfer(account, amount, message=None):
-    global accounts_df
+    global accounts_df, config
     unlockwallet()
     transfer = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push', 'action', str(config['CONTRACTOWNER']), 'transfer', 
     '[ '+str(config['CONTRACTOWNER'])+', '+str(account)+', "'+ str(amount)+'  '+str(config['TOKEN'])+'", '+str(message)+']', '-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
@@ -47,15 +47,16 @@ def hello_world():
 
 @app.route('/createAccount')
 def createAccount():
-    global accounts_df, config
+    global config
+    accounts_df = openMatch('accounts')
     unlockwallet()
     uid = str(request.args.get('uid'))
     username = str(request.args.get('username'))
     amount = str(request.args.get('amount'))
     if(uid != None):
 
-        if (uid in np.array(accounts_df['uid'])):
-            index = list(accounts_df['uid']).index(uid)
+        if (int(uid) in np.array(accounts_df['uid'])):
+            index = list(accounts_df['uid']).index(int(uid))
             response = str({
                 "username": str(accounts_df['username'].iloc[index]),
                 "account": str(accounts_df['account'].iloc[index]),
@@ -81,11 +82,12 @@ def createAccount():
                 f.write(str(create_user_out))
                 if (str(create_user_out).find("transaction executed") >= 0):
                     response = {'username': str(username),
+                                'account': str(account),
                                 'private_key':str(private_key),
-                                'public_key':str(public_key),
-                                'account': str(account)
+                                'public_key':str(public_key)
                                 }
                     created = True
+                    transfer(account, amount, 'initial')
                     #insert into account df
                     accounts_df = accounts_df.append({'uid':uid,'username':username,'account':account,'privatekey':private_key,'publickey':public_key}, ignore_index=True)
                     accounts_df.to_csv("accounts.csv", index= False)
@@ -112,8 +114,8 @@ def getScores():
         accounts_df = openMatch(match)
         temp_df = accounts_df
         unlockwallet()
-        response = [{"name":temp_df['account'].loc[index], "balance":balance(temp_df['account'].loc[index])} for index in range(temp_df.shape[0])]
-        response = sorted(response, key = lambda i: i['balance'],reverse=True) 
+        response = [{"name":temp_df['account'].loc[index], "balance":float(balance(temp_df['account'].loc[index]))} for index in range(temp_df.shape[0])]
+        response = sorted(response, key = lambda i: i["balance"],reverse=True) 
     else:
         response = {"error":"match not found"}
     return str(response).replace("\'","\"")
@@ -208,7 +210,7 @@ def createMatch():
             if (str(issue_out).find("transaction executed") >= 0):
                 match = str(rstr.rstr('0123456789',10))
                 new_match = pd.DataFrame({'uid':[],'account':[],'start_time':[],'balance':[]})
-                new_match.to_csv(match+'.csv')
+                new_match.to_csv(match+'.csv', index= False)
                 response = {"match": match}
             else:
                 response = {"error":"error issuing tokens"}
@@ -234,18 +236,18 @@ def getProfile():
     global config
     accounts_df = openMatch('accounts')
     uid = str(request.args.get('uid'))
-    try:
+    if (int(uid) in np.array(accounts_df['uid'])):
         index = list(accounts_df['uid']).index(int(uid))
         response = {"account": accounts_df['account'].loc[index],
                     "privatekey": accounts_df['privatekey'].loc[index],
                     "balance": balance(accounts_df['account'].loc[index])}
-    except:
-        response = {"error": "uid not in match"}
+    else:
+        response = {"error": "uid not in recognized"}
     return str(response).replace("\'","\"")
 
 @app.route('/joinMatch')
 def joinMatch():
-    global accounts_df, config
+    global config
     uid = str(request.args.get('uid'))
     match = str(request.args.get('match'))
     time = str(request.args.get('time'))
@@ -253,23 +255,22 @@ def joinMatch():
     accounts_df = openMatch('accounts')
     if str(match+'.csv') in files:
         df = openMatch(match)
-        if(list(accounts_df['uid']).index(int(uid))>=0):
+        if(int(uid) in np.array(accounts_df['uid'])):
             if len(df.index)==0:
                 index = list(accounts_df['uid']).index(int(uid))
                 df = df.append({'uid':uid,'account':accounts_df['account'].loc[index],'start_time':time,'balance':balance(uid)}, ignore_index=True)
                 response = {"action": "user added to match"}
-                df.to_csv(match+'.csv')
+                df.to_csv(match+'.csv', index= False)
                 response = {"action":"user inserted in match"}
             else:
-                try:
+                if(int(uid) in np.array(df['uid'])):
                     al = list(df['uid']).index(int(uid))
                     response = {"action": "player already in match"}
-                except:
+                else:
                     index = list(accounts_df['uid']).index(int(uid))
                     df = df.append({'uid':uid,'account':accounts_df['account'].loc[index],'start_time':time,'balance':balance(uid)}, ignore_index=True)
                     response = {"action": "user added to match"}
-                    df.to_csv(match+'.csv')
-                    response = {"action":"user inserted in match"}
+                    df.to_csv(match+'.csv', index= False)
         else:
             response = {"error":"uid not in accounts"}
     else:
