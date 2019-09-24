@@ -193,13 +193,15 @@ def getHint():
 
 @app.route('/createMatch')
 def createMatch():
-    global accounts_df
+    global accounts_df, config
     password = str(request.args.get('password'))
-    symbol = str(request.args.get('symbol'))
+    symbol = str(rstr.rstr('ABCDEFGHIJKLMNOPQRSTUVWXYZ',3))
     maximum = str(request.args.get('maximum'))
     
+    pass
     if(password == "Queteimporta123" and symbol != None and maximum != None):
         unlockwallet()
+
         new_token = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push','action', str(config['CONTRACTOWNER']),'create',
         '[ '+str(config['CONTRACTOWNER'])+', "'+str(maximum)+' '+str(symbol)+'"]','-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         new_token_out, new_token_err = new_token.communicate()
@@ -211,12 +213,15 @@ def createMatch():
                 match = str(rstr.rstr('0123456789',10))
                 new_match = pd.DataFrame({'uid':[],'account':[],'start_time':[],'balance':[]})
                 new_match.to_csv(match+'.csv', index= False)
+                config['TOKEN']=symbol
+                with open('configuration.yml', 'w') as f:
+                    yaml.dump(config, f)
                 response = {"match": match}
             else:
                 response = {"error":"error issuing tokens"}
         else:
             response = {"error": new_token_out}
-        
+
     response = str(response).replace("\'","\"")
     return response
     
