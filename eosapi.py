@@ -106,7 +106,7 @@ def createAccount():
 
 @app.route('/getScores')
 def getScores():
-    match = str(request.args.set('match'))
+    match = str(request.args.get('match'))
     files = os.listdir(os.getcwd())
     if str(match+'.csv') in files:
         accounts_df = openMatch(match)
@@ -115,7 +115,7 @@ def getScores():
         response = [{"name":temp_df['username'].loc[index], "balance":balance(temp_df['account'].loc[index])} for index in range(temp_df.shape[0])]
         response = sorted(response, key = lambda i: i['balance'],reverse=True) 
     else:
-        {"error":"match not found"}
+        response = {"error":"match not found"}
     return str(response).replace("\'","\"")
         
 
@@ -123,7 +123,7 @@ def getScores():
 def getBalance():
     global config
     uid = str(request.args.get('uid'))
-    match = str(request.args.set('match'))
+    match = str(request.args.get('match'))
     accounts_df = openMatch(match)
     unlockwallet()
     if (uid != None):
@@ -143,7 +143,7 @@ def getBalance():
 
 @app.route('/getReward')
 def getReward():
-    match = str(request.args.set('match'))
+    match = str(request.args.get('match'))
     uid = str(request.args.get('uid'))
     amount = str(request.args.get('amount'))
     accounts_df = openMatch(match)
@@ -166,7 +166,7 @@ def getReward():
 
 @app.route('/getHint')
 def getHint():
-    match = str(request.args.set('match'))
+    match = str(request.args.get('match'))
     uid = str(request.args.get('uid'))
     amount = str(request.args.get('amount'))
     accounts_df = openMatch(match)
