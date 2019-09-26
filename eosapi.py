@@ -5,10 +5,10 @@ import pandas as pd
 import numpy as np
 import rstr
 import yaml
-from flask_cors import CORS
+# from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+# CORS(app)
 config = yaml.load(open("configuration.yml", "r"), Loader=yaml.FullLoader)
 accounts_df = pd.read_csv('accounts.csv')
 def openMatch(number):
@@ -56,7 +56,7 @@ def createAccount():
     amount = str(request.args.get('amount'))
     if(uid != None):
 
-        if (uid in np.array(accounts_df['uid'])):
+        try:
             index = list(accounts_df['uid']).index(uid)
             response = str({
                 "username": str(accounts_df['username'].iloc[index]),
@@ -65,7 +65,7 @@ def createAccount():
                 "publickey": str(accounts_df['publickey'].iloc[index])
             })
             
-        else:
+        except:
             #create keys
             create_keys = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'create', 'key', '-f', 'KeysUser.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             f = open(os.path.join("KeysUser.txt"), "r")
@@ -90,7 +90,7 @@ def createAccount():
                     created = True
                     transfer(account, amount, 'initial')
                     #insert into account df
-                    accounts_df = accounts_df.append({'uid':uid,'username':username,'account':account,'privatekey':private_key,'publickey':public_key}, ignore_index=True)
+                    accounts_df = accounts_df.append({'uid':str(uid),'username':username,'account':account,'privatekey':private_key,'publickey':public_key}, ignore_index=True)
                     accounts_df.to_csv("accounts.csv", index= False)
                 elif (str(create_user_out).find("Account name already exists") >= 0):
                     created = False
@@ -242,13 +242,16 @@ def getProfile():
     global config
     accounts_df = openMatch('accounts')
     uid = str(request.args.get('uid'))
-    print(uid)
-    if (uid in np.array(accounts_df['uid'])):
+    print(type(uid))
+    print(list(accounts_df['uid']))
+    try:
+    # if (uid in np.array(accounts_df['uid'])):
         index = list(accounts_df['uid']).index(uid)
+        print(index)
         response = {"account": accounts_df['account'].loc[index],
                     "privatekey": accounts_df['privatekey'].loc[index],
                     "balance": balance(accounts_df['account'].loc[index])}
-    else:
+    except:
         response = {"error": "uid not in recognized"}
     return str(response).replace("\'","\"")
 
@@ -270,7 +273,7 @@ def joinMatch():
                 df.to_csv(match+'.csv', index= False)
                 response = {"action":"user inserted in match"}
             else:
-                if(int(uid) in np.array(df['uid'])):
+                if(uid in np.array(df['uid'])):
                     al = list(df['uid']).index(uid)
                     response = {"action": "player already in match"}
                 else:
