@@ -57,7 +57,7 @@ python3 eosapi.py
 
 #### createAccount/
 
-HOST:PORT/createAccount?uid=8khblsffwn343224&username=myaccount123
+HOST:PORT/createAccount?uid=8khblsffwn343224&username=pedrito&amount=100.0000
 
 ##### Description
 
@@ -71,14 +71,15 @@ If the user exists in the players table of the contract and the email provided i
 
 The response of the API should look like the following JSON structure:
 
-{"username": "Isabel",
-"private_key": "5K7sHYshU68Vs4gBANWwRGESESNa5RrEjMUdsNPKGKkaqnZjVQ2", 
-"public_key": "EOS7Xa1oLuYvuUMtwzgj5GKEUbMmLf9473tbvZJbfmyn5c3DUsfoT"}
+{"username": "pedrito", 
+“account”:”predit432345”,
+"private_key": "5K7sHYshU68Vs4gBANWwRGESESNa5RrEjMUdsNPKGKkaqnZjVQ2", "public_key": "EOS7Xa1oLuYvuUMtwzgj5GKEUbMmLf9473tbvZJbfmyn5c3DUsfoT"}
+
 ___
 
 #### getScores/
 
-HOST:PORT/getScores
+HOST:PORT/getScores?match=matchcode
 
  ##### Description
 This endpoint should return a json structure containing the players info.
@@ -100,7 +101,7 @@ ___
 #### getBalance/
 
   
-HOST:PORT/getBalance?uid=12312312312
+HOST:PORT/getBalance?uid=12312312312&match=matchcode
 
 ##### Description
 Returns the balance of tokens for the provided uid.
@@ -113,7 +114,7 @@ Returns the balance of tokens for the provided uid.
   
 ___
 #### getReward/
-HOST:PORT/getReward?uid=12344565&amount=23.0000
+HOST:PORT/getReward?uid=12344565&amount=23.0000&match=matchcode
 
 
 ##### Description
@@ -127,7 +128,7 @@ If the transaction is executed successfully, a json structures will return indic
   
 ___
 #### getHint/
-HOST:PORT/getReward?uid=12344565&amount=23.000
+HOST:PORT/getHint?uid=12344565&amount=23.0000&match=matchcode
 
   
 
@@ -146,7 +147,7 @@ If the transaction is executed successfully, a json structures will return indic
   
 ___
 #### createMatch/
-HOST:PORT/getReward?uid=12344565password=123&symbol=MI&maximum=100000.0000
+HOST:PORT/createMatch?password=Queteimporta123&maximum=100000.0000
 
   
 
@@ -160,6 +161,19 @@ This endpoint will create a new token based on the symbol and maximum parameter 
 
  
 {"action":"match created successfully"}
+___
+
+#### joinMatch/
+
+HOST:PORT/joinMatch?uid=123456789&match=matchcode&time=20190523
+
+##### Description
+This endpoint will add the player described by the uid to the corresponding match described by the match parameter.
+
+##### Response
+
+{"action":"player added succesfully"}
+
 
 
 
