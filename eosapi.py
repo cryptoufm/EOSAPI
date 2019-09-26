@@ -56,8 +56,8 @@ def createAccount():
     amount = str(request.args.get('amount'))
     if(uid != None):
 
-        if (int(uid) in np.array(accounts_df['uid'])):
-            index = list(accounts_df['uid']).index(int(uid))
+        if (uid in np.array(accounts_df['uid'])):
+            index = list(accounts_df['uid']).index(uid)
             response = str({
                 "username": str(accounts_df['username'].iloc[index]),
                 "account": str(accounts_df['account'].iloc[index]),
@@ -130,7 +130,7 @@ def getBalance():
     accounts_df = openMatch(match)
     unlockwallet()
     if (uid != None):
-        index = list(accounts_df['uid']).index(int(uid))
+        index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         get_balance = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'get', 'currency', 'balance',
         str(config['CONTRACTOWNER']), str(account) , str(config['TOKEN'])], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -153,7 +153,7 @@ def getReward():
     accounts_df = openMatch(match)
     unlockwallet()
     if (uid != None and amount!= None):
-        index = list(accounts_df['uid']).index(int(uid))
+        index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         transfer = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push', 'action', str(config['CONTRACTOWNER']), 'transfer', 
         '[ '+str(config['CONTRACTOWNER'])+', '+str(account)+', "'+ str(amount)+'  '+str(config['TOKEN'])+'", reward]', '-p', str(config['CONTRACTOWNER'])+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
@@ -177,7 +177,7 @@ def getHint():
     accounts_df = openMatch(match)
     unlockwallet()
     if (uid != None and amount!= None and match != None):
-        index = list(accounts_df['uid']).index(int(uid))
+        index = list(accounts_df['uid']).index(uid)
         account = str(accounts_df['account'].iloc[index])
         transfer = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'push', 'action', str(config['CONTRACTOWNER']), 'transfer', 
         '[ '+str(account)+', '+str(config['CONTRACTOWNER'])+',  "'+ str(amount)+'  '+str(config['TOKEN'])+'", hint]', '-p', str(account)+'@active'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) 
@@ -242,8 +242,9 @@ def getProfile():
     global config
     accounts_df = openMatch('accounts')
     uid = str(request.args.get('uid'))
-    if (int(uid) in np.array(accounts_df['uid'])):
-        index = list(accounts_df['uid']).index(int(uid))
+    print(uid)
+    if (uid in np.array(accounts_df['uid'])):
+        index = list(accounts_df['uid']).index(uid)
         response = {"account": accounts_df['account'].loc[index],
                     "privatekey": accounts_df['privatekey'].loc[index],
                     "balance": balance(accounts_df['account'].loc[index])}
@@ -261,19 +262,19 @@ def joinMatch():
     accounts_df = openMatch('accounts')
     if str(match+'.csv') in files:
         df = openMatch(match)
-        if(int(uid) in np.array(accounts_df['uid'])):
+        if(uid in np.array(accounts_df['uid'])):
             if len(df.index)==0:
-                index = list(accounts_df['uid']).index(int(uid))
+                index = list(accounts_df['uid']).index(uid)
                 df = df.append({'uid':uid,'account':accounts_df['account'].loc[index],'start_time':time,'balance':balance(uid)}, ignore_index=True)
                 response = {"action": "user added to match"}
                 df.to_csv(match+'.csv', index= False)
                 response = {"action":"user inserted in match"}
             else:
                 if(int(uid) in np.array(df['uid'])):
-                    al = list(df['uid']).index(int(uid))
+                    al = list(df['uid']).index(uid)
                     response = {"action": "player already in match"}
                 else:
-                    index = list(accounts_df['uid']).index(int(uid))
+                    index = list(accounts_df['uid']).index(uid)
                     df = df.append({'uid':uid,'account':accounts_df['account'].loc[index],'start_time':time,'balance':balance(uid)}, ignore_index=True)
                     response = {"action": "user added to match"}
                     df.to_csv(match+'.csv', index= False)
