@@ -5,9 +5,10 @@ import pandas as pd
 import numpy as np
 import rstr
 import yaml
+from flask_cors import CORS
 
 app = Flask(__name__)
- 
+CORS(app)
 config = yaml.load(open("configuration.yml", "r"), Loader=yaml.FullLoader)
 accounts_df = pd.read_csv('accounts.csv')
 def openMatch(number):
