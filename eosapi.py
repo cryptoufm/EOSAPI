@@ -5,10 +5,10 @@ import pandas as pd
 import numpy as np
 import rstr
 import yaml
-# from flask_cors import CORS
+from flask_cors import CORS
 
 app = Flask(__name__)
-# CORS(app)
+CORS(app)
 config = yaml.load(open("configuration.yml", "r"), Loader=yaml.FullLoader)
 accounts_df = pd.read_csv('accounts.csv')
 def openMatch(number):
@@ -115,7 +115,7 @@ def getScores():
         accounts_df = openMatch(match)
         temp_df = accounts_df
         unlockwallet()
-        response = [{"name":temp_df['account'].loc[index], "balance":float(balance(temp_df['account'].loc[index]))} for index in range(temp_df.shape[0])]
+        response = [{"name":temp_df['account'].loc[index], "balance":str(float(balance(temp_df['account'].loc[index])))} for index in range(temp_df.shape[0])]
         response = sorted(response, key = lambda i: i["balance"],reverse=True) 
     else:
         response = {"error":"match not found"}

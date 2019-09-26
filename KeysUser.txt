@@ -1,2 +1,2 @@
-Private key: 5JqTn2tyg97HF4NSRWNAvxByJWPCF9P4NoAjyi83roNEnsr6r86
-Public key: EOS5WhUmMnGPvyUyChEBJjCDAqrxwmDDM7sLJATvRQbQcNfj3YAaz
+Private key: 5Hw8jah9rH5zULha7mjqwkGYDLKDZhEXRaa9faoEynFEudKsRrt
+Public key: EOS8UYnLojdUcPPusAywXigzgjHXESXgL4sfWv3xYx1mQrVxLLgpZ
