@@ -56,7 +56,7 @@ def createAccount():
     amount = str(request.args.get('amount'))
     if(uid != None):
 
-        try:
+        if (uid in np.array(accounts_df['uid'])):
             index = list(accounts_df['uid']).index(uid)
             response = str({
                 "username": str(accounts_df['username'].iloc[index]),
@@ -65,7 +65,7 @@ def createAccount():
                 "publickey": str(accounts_df['publickey'].iloc[index])
             })
             
-        except:
+        else:
             #create keys
             create_keys = subprocess.Popen(['cleos', '-u', str(config['JUNGLEENDPOINT']), 'create', 'key', '-f', 'KeysUser.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             f = open(os.path.join("KeysUser.txt"), "r")
@@ -88,9 +88,9 @@ def createAccount():
                                 'public_key':str(public_key)
                                 }
                     created = True
-                    tr = transfer(account, amount, 'initial')
+                    transfer(account, amount, 'initial')
                     #insert into account df
-                    accounts_df = accounts_df.append({'uid':str(uid),'username':username,'account':account,'privatekey':private_key,'publickey':public_key}, ignore_index=True)
+                    accounts_df = accounts_df.append({'uid':uid,'username':username,'account':account,'privatekey':private_key,'publickey':public_key}, ignore_index=True)
                     accounts_df.to_csv("accounts.csv", index= False)
                 elif (str(create_user_out).find("Account name already exists") >= 0):
                     created = False
@@ -115,7 +115,7 @@ def getScores():
         accounts_df = openMatch(match)
         temp_df = accounts_df
         unlockwallet()
-        response = [{"name":temp_df['account'].loc[index], "balance":str(float(balance(temp_df['account'].loc[index])))} for index in range(temp_df.shape[0])]
+        response = [{"name":temp_df['account'].loc[index], "balance":float(balance(temp_df['account'].loc[index]))} for index in range(temp_df.shape[0])]
         response = sorted(response, key = lambda i: i["balance"],reverse=True) 
     else:
         response = {"error":"match not found"}
@@ -242,16 +242,13 @@ def getProfile():
     global config
     accounts_df = openMatch('accounts')
     uid = str(request.args.get('uid'))
-    print(type(uid))
-    print(list(accounts_df['uid']))
-    try:
-    # if (uid in np.array(accounts_df['uid'])):
+    
+	if (uid in np.array(accounts_df['uid'])):
         index = list(accounts_df['uid']).index(uid)
-        print(index)
         response = {"account": accounts_df['account'].loc[index],
                     "privatekey": accounts_df['privatekey'].loc[index],
                     "balance": balance(accounts_df['account'].loc[index])}
-    except:
+    else:
         response = {"error": "uid not in recognized"}
     return str(response).replace("\'","\"")
 
@@ -271,7 +268,6 @@ def joinMatch():
                 df = df.append({'uid':uid,'account':accounts_df['account'].loc[index],'start_time':time,'balance':balance(uid)}, ignore_index=True)
                 response = {"action": "user added to match"}
                 df.to_csv(match+'.csv', index= False)
-		#transfer(accounts_df['account'].loc[index], "100.0000", 'initial')
                 response = {"action":"user inserted in match"}
             else:
                 if(uid in np.array(df['uid'])):
